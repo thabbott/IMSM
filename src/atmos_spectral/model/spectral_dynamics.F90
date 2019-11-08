@@ -104,6 +104,7 @@ character(len=128), parameter :: tagname = '$Name: siena_201211 $'
 !===============================================================================================
 ! variables needed for diagnostics
 integer :: id_ps, id_u, id_v, id_t, id_vor, id_div, id_omega, id_wspd, id_slp
+integer :: id_vors, id_divs, id_eddyu, id_eddyv, id_eddyt
 integer :: id_pres_full, id_pres_half, id_zfull, id_zhalf, id_vort_norm, id_EKE
 integer :: id_uu, id_vv, id_tt, id_omega_omega, id_uv, id_omega_t
 integer, allocatable, dimension(:) :: id_tr
@@ -1403,9 +1404,12 @@ real, dimension(lat_max  ) :: lat
 real, dimension(lat_max+1) :: latb
 real, dimension(num_levels)   :: p_full, ln_p_full
 real, dimension(num_levels+1) :: p_half, ln_p_half
-integer, dimension(3) :: axes_3d_half, axes_3d_full
+integer, dimension(3) :: axes_3d_half, axes_3d_full, axes_spectral_full
 integer :: id_lonb, id_latb, id_phalf, id_lon, id_lat, id_pfull
 integer :: id_pk, id_bk, id_zsurf, ntr
+integer :: id_zmode, id_smode, ii
+real, dimension(num_fourier+1) :: zmode
+real, dimension(num_spherical+1) :: smode
 real :: rad_to_deg
 logical :: used
 real,dimension(2) :: vrange
@@ -1443,6 +1447,21 @@ id_zsurf = register_static_field(mod_name, 'zsurf', (/id_lon,id_lat/), 'geopoten
 if(id_pk    > 0) used = send_data(id_pk, pk, Time)
 if(id_bk    > 0) used = send_data(id_bk, bk, Time)
 if(id_zsurf > 0) used = send_data(id_zsurf, surf_geopotential/grav, Time)
+
+id_vors = register_diag_field(mod_name, &
+    'vors', axes_spectral_full, Time, 'spectral vorticity squared', 'sec**-2')
+
+id_divs = register_diag_field(mod_name, &
+    'divs', axes_spectral_full, Time, 'spectral divergence squared', 'sec**-2')
+
+id_eddyu = register_diag_field(mod_name, &
+    'eddyu', axes_3d_full, Time, 'eddy zonal velocity', 'm/sec')
+
+id_eddyv = register_diag_field(mod_name, &
+    'eddyv', axes_3d_full, Time, 'eddy meridonal velocity', 'm/sec')
+
+id_eddyt = register_diag_field(mod_name, &
+    'eddyt', axes_3d_full, Time, 'eddy temperature perturbation', 'deg_k')
 
 id_ps  = register_diag_field(mod_name, &
       'ps', (/id_lon,id_lat/),       Time, 'surface pressure',             'pascals')
@@ -1636,6 +1655,36 @@ if(id_EKE > 0) then
   call uv_grid_from_vor_div(vor_spec, div_spec, worka3d, workb3d)
   EKE = mass_weighted_global_integral(.5*(worka3d**2 + workb3d**2), p_surf)
   used = send_data(id_EKE, EKE, Time)
+endif
+
+! Save vorticity, divergence, eddy velocities
+if (id_vors > 0 .or. id_divs > 0 .or. id_eddyu > 0 .or. id_eddyv > 0) then
+    
+    ! Compute vorticity and divergence
+    call vor_div_from_uv_grid(u_grid, v_grid, vor_spec, div_spec, &
+        triang = triang_trunc)
+    if (id_vors > 0) used = send_data(id_vors, &
+        real(vor_spec)**2 + aimag(vor_spec)**2, Time)
+    if (id_divs > 0) used = send_data(id_divs, &
+        real(div_spec)**2 + aimag(div_spec)**2, Time)
+    
+    ! Compute eddy velocities
+    if (ms == 0) then
+        vor_spec(0,:,:) = cmplx(0.0,0.0)
+        div_spec(0,:,:) = cmplx(0.0,0.0)
+    endif
+    call uv_grid_from_vor_div(vor_spec, div_spec, worka3d, workb3d)
+    if (id_eddyu > 0) used = send_data(id_eddyu, worka3d, Time)
+    if (id_eddyv > 0) used = send_data(id_eddyv, workb3d, Time)
+
+endif
+
+! Save eddy temperature perturbation
+if (id_eddyt > 0) then
+    call trans_grid_to_spherical(t_grid, t_spec)
+    if (ms == 0) t_spec(0,:,:) = cmplx(0.0,0.0)
+    call trans_spherical_to_grid(t_spec, worka3d)
+    used = send_data(id_eddyt, worka3d, Time)
 endif
 
 return
