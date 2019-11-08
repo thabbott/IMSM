@@ -1,5 +1,5 @@
  &main_nml
-    days = 20,
+    days = 60,
     dt_atmos = 600 /
 
 # Note: damping_order = 4 specifies del 8'th diffusion
