@@ -17,8 +17,8 @@ set pathnames = $cwd/../input/path_names             # path to file containing l
 set ppdir     = $cwd/../postprocessing               # path to directory containing the tool for combining distributed diagnostic output files
 #--------------------------------------------------------------------------------------------------------
 set execdir = $cwd/exec.$platform  # where code is compiled and executable is created
-set exename = idealized_moist
-set executable = $execdir/$exename
+set execname = idealized_moist
+set executable = $execdir/$execname
 
 source /etc/profile.d/modules.csh
 module load engaging/intel/2013.1.046
@@ -63,4 +63,4 @@ echo "NOTE: make successful for idealized_moist model"
 
 # Record information about environment at time of build
 cd ..
-bash postBuild $exedir $exename
+bash postBuild $execdir $execname
