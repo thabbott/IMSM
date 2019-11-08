@@ -3,27 +3,29 @@
 # Get executable name
 echo "Enter short ID for executable:"
 read ID
-while [ -f $1_$ID ]
+while [ -f $1/$2_$ID ]
 do
 echo "ID already in use. Try another:"
 read ID
 done
 
 # Get executable ID
-mv $1 $1_$ID
+mv $1/$2 $1/$2_$ID
 
 # Store executable information
 repo=$(git config --get remote.origin.url)
 branch=$(git rev-parse --abbrev-ref HEAD)
 commit=$(git rev-parse HEAD)
 timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-echo "$1_$ID" >> build_record
+echo "$1/$2_$ID" >> build_record
 echo "timestamp: ${timestamp}" >> build_record
 echo "git repo:  ${repo}" >> build_record
 echo "branch:    ${branch}" >> build_record
 echo "commit:    ${commit}" >> build_record
 echo "" >> build_record
 
-# 
+# Update git repository
+echo '*.mod' > $1/.gitignore
+echo '*.o' >> $1/.gitignore
 git add .
-git commit -m "Compiled ${1}_${ID}"
+git commit -m "Compiled ${1}/${2}_${ID}"
