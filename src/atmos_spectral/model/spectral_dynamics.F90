@@ -1549,7 +1549,7 @@ integer, intent(in) :: time_level
 real, dimension(is:ie, js:je, num_levels)    :: ln_p_full, p_full, z_full, worka3d, workb3d
 real, dimension(is:ie, js:je, num_levels+1)  :: ln_p_half, p_half, z_half
 real, dimension(is:ie, js:je)                :: t_low, slp, worka2d, workb2d
-complex, dimension(ms:me, ns:ne, num_levels) :: vor_spec, div_spec
+complex, dimension(ms:me, ns:ne, num_levels) :: vor_spec, div_spec, t_spec
 complex, dimension(ms:me, ns:ne)             :: vorx, vory
 logical :: used
 integer :: ntr, i, j, k
