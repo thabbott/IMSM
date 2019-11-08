@@ -1435,6 +1435,7 @@ id_pfull = diag_axis_init('pfull',p_full,'hPa','z','approx full pressure level',
 
 axes_3d_half = (/ id_lon, id_lat, id_phalf /)
 axes_3d_full = (/ id_lon, id_lat, id_pfull /)
+axes_spectral_full = (/ id_zmode, id_smode, id_pfull /)
 axis_id(1) = id_lon
 axis_id(2) = id_lat
 axis_id(3) = id_pfull

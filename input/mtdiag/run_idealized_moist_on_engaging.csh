@@ -3,7 +3,7 @@
 set echo 
 #--------------------------------------------------------------------------------------------------------
 # define variables
-set execid = default
+set execid = mtdiag
 set execdir = exec.engaging.intel
 set execname = idealized_moist
 set executable = ${execname}_${execid}
