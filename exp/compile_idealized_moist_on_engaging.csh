@@ -60,4 +60,6 @@ endif
 unset echo
 echo "NOTE: make successful for idealized_moist model"
 
+# Record information about environment at time of build
+cd ..
 bash postBuild $executable
