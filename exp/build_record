@@ -4,3 +4,9 @@ git repo:  https://thabbott@github.com/thabbott/IMSM.git
 branch:    master
 commit:    509de59a5dcf354f77b2561b1b1ae951317f616c
 
+/home/thabbott/idealized_moist_atmospheric_model/exp/exec.engaging.intel/idealized_moist_mtdiag
+timestamp: 2019-11-08 12:43:58
+git repo:  https://thabbott@github.com/thabbott/IMSM.git
+branch:    master
+commit:    ea0f2daecd952d9ed1d8b66d8e636d99222e5143
+
