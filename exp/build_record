@@ -1,9 +1,3 @@
-/home/thabbott/idealized_moist_atmospheric_model/exp/exec.engaging.intel/idealized_moist_dryrun
-timestamp: 2019-11-08 10:20:13
-git repo:  
-branch:    master
-commit:    fe76f744d038a6cd0a09bcdd09abfa01a673febb
-
 /home/thabbott/idealized_moist_atmospheric_model/exp/exec.engaging.intel/idealized_moist_default
 timestamp: 2019-11-08 10:30:14
 git repo:  https://thabbott@github.com/thabbott/IMSM.git
