@@ -1,0 +1,8 @@
+#!/bin/bash
+# Check that working directory is clean
+if [ -z "$(git status --porcelain)" ]; then
+    echo "Working directory clean. Starting build..."
+else
+    echo "Uncommitted changes. Exiting..."
+    exit -1
+fi
