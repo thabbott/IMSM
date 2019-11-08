@@ -3,29 +3,26 @@
 set echo 
 #--------------------------------------------------------------------------------------------------------
 # define variables
-#set platform = gaea.pgi                       # A unique identifier for your platform
- set platform  = gaea.intel
-#set platform = gaea.intel.debug
-set npes = 32                                  # Number of processors
+set execid = default
+set execdir = exec.engaging.intel
+set execname = idealized_moist
+set exp = `basename $cwd`
+set npes = 1                                   # Number of processors
 set num_executions = 1                         # Number of times the model is run. Each run restarts from previous run.
-set time_stamp = $cwd/../bin/time_stamp.csh    # Path to timestamp.csh
-set model_executable = $cwd/exec.$platform/idealized_moist.x  # Path to model executable
-set mppnccombine = $cwd/../postprocessing/mppnccombine.x    # The tool for combining distributed diagnostic output files
-set workdir = /lustre/fs/scratch/Peter.Phillipps/work/idealized_moist_public_release.$platform  # Where model is run and model output is produced
+set time_stamp = $cwd/../../bin/time_stamp.csh    # Path to timestamp.csh
+set model_executable = $cwd/../../exp/$execdir/$execname_$execid  # Path to model executable
+set mppnccombine = $cwd/../../postprocessing/mppnccombine.x    # The tool for combining distributed diagnostic output files
+set workdir = /nfs/twcroninlab002/thabbott/IMSM/$execname_$execid/$exp  # Where model is run and model output is produced
 #--------------------------------------------------------------------------------------------------------
-source $MODULESHOME/init/csh
-module use -a /ncrc/home2/fms/local/modulefiles
-module unload PrgEnv-pgi PrgEnv-pathscale PrgEnv-intel PrgEnv-gnu PrgEnv-cray
-module unload netcdf fre fre-commands
-module load PrgEnv-intel/4.0.46
-module swap intel intel/12.1.3.293
-module load netcdf/4.2.0
-module load hdf5/1.8.8
+source /etc/profile.d/modules.csh
+module load engaging/intel/2013.1.046
+module load engaging/hdf5
+module load engaging/zlib/1.2.8
 module list
 
-set namelist   = $cwd/../input/input.nml       # path to namelist file (contains all namelists)
-set diagtable  = $cwd/../input/diag_table      # path to diagnositics table (specifies fields and files for diagnostic output)
-set fieldtable = $cwd/../input/field_table     # path to field table (specifies tracers)
+set namelist   = $cwd/input.nml       # path to namelist file (contains all namelists)
+set diagtable  = $cwd/diag_table      # path to diagnositics table (specifies fields and files for diagnostic output)
+set fieldtable = $cwd/field_table     # path to field table (specifies tracers)
 #--------------------------------------------------------------------------------------------------------
 
 # setup directory structure
@@ -47,8 +44,9 @@ set irun = 1
 while ( $irun <= $num_executions )
 #--------------------------------------------------------------------------------------------------------
 
-# run the model
-aprun -n $npes ./$model_executable:t
+# ru nthe model
+setenv LD_LIBRARY_PATH /home/thabbott/local/netcdf-fortran/4.4.4/lib:/home/thabbott/local/netcdf/4.5.0/lib:$LD_LIBRARY_PATH
+mpirun -n $npes ./$model_executable:t
 if ($status != 0) then
   echo "Error in execution of $cwd/$model_executable:t"
   exit 1
