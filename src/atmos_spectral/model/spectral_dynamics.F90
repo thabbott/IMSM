@@ -1422,6 +1422,15 @@ call get_grid_boundaries(lonb,latb,global=.true.)
 call get_deg_lon(lon)
 call get_deg_lat(lat)
 
+! Set up spectral axes
+zmode = (/ (float(ii), ii = 0,num_fourier) /)
+smode = (/ (float(ii), ii = 0,num_spherical) /)
+id_zmode = diag_axis_init('zmode', zmode, 'nondim', 'x', 'zonal mode index', &
+    set_name = mod_name, Domain2 = spectral_domain)
+id_smode = diag_axis_init('smode', smode, 'nondim', 'y', &
+    'spherical mode index', set_name = mod_name, Domain2 = spectral_domain)
+
+! Set up physical axes
 id_lonb=diag_axis_init('lonb', rad_to_deg*lonb, 'degrees_E', 'x', 'longitude edges', set_name=mod_name, Domain2=grid_domain)
 id_latb=diag_axis_init('latb', rad_to_deg*latb, 'degrees_N', 'y', 'latitude edges',  set_name=mod_name, Domain2=grid_domain)
 id_lon =diag_axis_init('lon', lon, 'degrees_E', 'x', 'longitude', set_name=mod_name, Domain2=grid_domain, edges=id_lonb)
