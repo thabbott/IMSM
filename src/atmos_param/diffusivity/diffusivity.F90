@@ -492,6 +492,14 @@ do k = 2, nlev
     k_m(:,:,k) = k_m_ref*factor
     k_t(:,:,k) = k_t_ref*factor
   end where
+
+  ! Avoid possibility of k_m and k_t set to non-zero values above the PBL
+  ! due to use of maxval(h_inner) above. (Pointed out by Paul O'Gorman 11/12/19)
+  where(zm(:,:,k) >= h)
+    k_m(:,:,k) = 0.0
+    k_t(:,:,k) = 0.0
+  end where
+
 end do
 
 return

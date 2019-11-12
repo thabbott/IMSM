@@ -8,14 +8,12 @@ set execdir = exec.engaging.intel
 set execname = idealized_moist
 set executable = ${execname}_${execid}
 set exp = `basename $cwd`
-set inp = ${executable}/physics
 set npes = 4                                   # Number of processors
 set num_executions = 1                         # Number of times the model is run. Each run restarts from previous run.
 set time_stamp = $cwd/../../bin/time_stamp.csh    # Path to timestamp.csh
 set model_executable = $cwd/../../exp/$execdir/$executable  # Path to model executable
 set mppnccombine = $cwd/../../postprocessing/mppnccombine.x    # The tool for combining distributed diagnostic output files
 set workdir = /nfs/twcroninlab002/thabbott/IMSM/$executable/$exp  # Where model is run and model output is produced
-set inpdir = /nfs/twcroninlab002/thabbott/IMSM/$inp   # Where model input files are taken from
 #--------------------------------------------------------------------------------------------------------
 source /etc/profile.d/modules.csh
 module load engaging/intel/2013.1.046
@@ -42,10 +40,6 @@ cp $namelist   input.nml
 cp $diagtable  diag_table
 cp $fieldtable field_table
 cp $model_executable .
-
-#--------------------------------------------------------------------------------------------------------
-# Get input files
-ln -s $inpdir/INPUT/* INPUT/
 
 set irun = 1
 while ( $irun <= $num_executions )
