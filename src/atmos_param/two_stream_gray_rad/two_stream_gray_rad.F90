@@ -25,7 +25,7 @@ module two_stream_gray_rad_mod
 ! ==================================================================================
 
    use fms_mod,               only: open_file, check_nml_error, &
-                                    mpp_pe, close_file
+                                    mpp_pe, close_file, error_mesg
 
    use constants_mod,         only: stefan, cp_air, grav, pstd_mks
 
@@ -64,7 +64,11 @@ real    :: sw_diff         = 0.0
 real    :: linear_tau      = 0.1
 real    :: albedo_value    = 0.06
 real    :: wv_exponent     = 4.0 
-real    :: solar_exponent  = 4.0 
+real    :: solar_exponent  = 4.0
+logical :: do_byrne_lw     = .false.
+real    :: a_byrne         = 0.8678
+real    :: mu_byrne        = 1.0
+real    :: b_byrne         = 1997.7
 
 real, allocatable, dimension(:,:)   :: insolation, p2, albedo, lw_tau_0, sw_tau_0
 real, allocatable, dimension(:,:)   :: b_surf
@@ -72,19 +76,22 @@ real, allocatable, dimension(:,:,:) :: b, tdt_rad, tdt_solar
 real, allocatable, dimension(:,:,:) :: lw_up, lw_down, lw_flux, sw_up, sw_down, sw_flux, rad_flux 
 real, allocatable, dimension(:,:,:) :: lw_tau, sw_tau, lw_dtrans
 real, allocatable, dimension(:,:)   :: olr, net_lw_surf, toa_sw_in
+real, allocatable, dimension(:,:,:) :: lw_dtau
 
 real, save :: pi, deg_to_rad , rad_to_deg
 
 namelist/two_stream_gray_rad_nml/ solar_constant, del_sol, &
            ir_tau_eq, ir_tau_pole, atm_abs, sw_diff, &
            linear_tau, del_sw, albedo_value, wv_exponent, &
-           solar_exponent
+           solar_exponent, &
+           do_byrne_lw, a_byrne, mu_byrne, b_byrne
         
 !==================================================================================
 !-------------------- diagnostics fields -------------------------------
 
 integer :: id_olr, id_swdn_sfc, id_swdn_toa, id_net_lw_surf, id_lwdn_sfc, id_lwup_sfc, &
-           id_tdt_rad, id_tdt_solar, id_flux_rad, id_flux_lw, id_flux_sw
+           id_tdt_rad, id_tdt_solar, id_flux_rad, id_flux_lw, id_flux_sw, &
+           id_lw_dtau
 
 character(len=10), parameter :: mod_name = 'two_stream'
 
@@ -157,6 +164,8 @@ allocate (insolation       (ie-is+1, je-js+1))
 allocate (albedo           (ie-is+1, je-js+1))
 allocate (p2               (ie-is+1, je-js+1))
 
+allocate (lw_dtau          (ie-is+1, je-js+1, num_levels))
+
 
 !-----------------------------------------------------------------------
 !------------ initialize diagnostic fields ---------------
@@ -210,14 +219,19 @@ allocate (p2               (ie-is+1, je-js+1))
         register_diag_field ( mod_name, 'flux_sw', axes(half), Time, &
                'Net shortwave radiative flux (positive up)', &
                'W/m^2', missing_value=missing_value               )
+    
+    id_lw_dtau = &
+        register_diag_field ( mod_name, 'lw_dtau', axes(1:3), Time, &
+               'Longwave optical thickness', &
+               'nondim', missing_value=missing_value             )
 
 return
 end subroutine two_stream_gray_rad_init
 
 ! ==================================================================================
 
-subroutine two_stream_gray_rad_down (is, js, Time_diag, lat, p_half, t,         &
-                           net_surf_sw_down, surf_lw_down)
+subroutine two_stream_gray_rad_down (is, js, Time_diag, lat, p_half, t,       &
+                           net_surf_sw_down, surf_lw_down, q)
 
 ! Begin the radiation calculation by computing downward fluxes.
 ! This part of the calculation does not depend on the surface temperature.
@@ -228,12 +242,19 @@ real, intent(in), dimension(:,:)    :: lat
 real, intent(out), dimension(:,:)   :: net_surf_sw_down
 real, intent(out), dimension(:,:)   :: surf_lw_down
 real, intent(in), dimension(:,:,:)  :: t, p_half
+real, intent(in), dimension(:,:,:), optional  :: q
 
 integer :: i, j, k, n
 
 logical :: used
 
 n = size(t,3)
+
+if (do_byrne_lw .and. (.not. present(q))) then
+    call error_mesg("Water vapor field must be passed to " // &
+                    "two_stream_gray_rad_down if do_byrne_lw == .true.", &
+                    FATAL)
+endif
 
 ! insolation at TOA
 p2          = (1. - 3.*sin(lat)**2)/4.
@@ -262,9 +283,18 @@ end do
 
 b = stefan*t**4
 
+! longwave optical thickness at each level
+if (do_byrne_lw) then
+    lw_dtau = a_byrne * mu_byrne + b_byrne * q
+else
+    do k = 1, n
+        lw_dtau(:,:,k) = lw_tau(:,:,k+1) - lw_tau(:,:,k)
+    enddo
+endif
+
 ! longwave differential transmissivity
 do k = 1, n
-   lw_dtrans(:,:,k) = exp( -(lw_tau(:,:,k+1) - lw_tau(:,:,k)) )
+   lw_dtrans(:,:,k) = exp(-lw_dtau(:,:,k))
 end do
 
 ! compute downward longwave flux by integrating downward
@@ -379,6 +409,10 @@ endif
 if ( id_flux_sw > 0 ) then
    used = send_data ( id_flux_sw, sw_flux, Time_diag)
 endif
+!------- longwave optical thickness ------------
+if ( id_lw_dtau > 0 ) then
+   used = send_data ( id_lw_dtau, lw_dtau, Time_diag)
+endif
 
 return
 end subroutine two_stream_gray_rad_up
@@ -393,6 +427,7 @@ deallocate (lw_up, lw_down, lw_flux, sw_up, sw_down, sw_flux, rad_flux)
 deallocate (b_surf, olr, net_lw_surf, toa_sw_in, lw_tau_0, sw_tau_0)
 deallocate (lw_dtrans, lw_tau, sw_tau)
 deallocate (insolation, p2, albedo)
+deallocate (lw_dtau)
 
 end subroutine two_stream_gray_rad_end
 

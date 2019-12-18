@@ -397,7 +397,8 @@ if(two_stream) then
                        p_half(:,:,:,current),  &
                        tg(:,:,:,previous),     &
                        net_surf_sw_down(:,:),  &
-                       surf_lw_down(:,:))
+                       surf_lw_down(:,:),      &
+                       qg_tmp(:,:,:))
 end if
 
 if(.not.mixed_layer_bc) then
