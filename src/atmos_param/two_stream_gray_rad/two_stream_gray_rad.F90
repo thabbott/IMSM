@@ -251,8 +251,8 @@ logical :: used
 n = size(t,3)
 
 if (do_byrne_lw .and. (.not. present(q))) then
-    call error_mesg("Water vapor field must be passed to " // &
-                    "two_stream_gray_rad_down if do_byrne_lw == .true.", &
+    call error_mesg('two_stream_gray_rad_down', &
+                    'missing water vapor argument with do_byrne_lw == .true.', &
                     FATAL)
 endif
 
