@@ -25,7 +25,7 @@ module two_stream_gray_rad_mod
 ! ==================================================================================
 
    use fms_mod,               only: open_file, check_nml_error, &
-                                    mpp_pe, close_file, error_mesg
+                                    mpp_pe, close_file, error_mesg, FATAL
 
    use constants_mod,         only: stefan, cp_air, grav, pstd_mks
 
