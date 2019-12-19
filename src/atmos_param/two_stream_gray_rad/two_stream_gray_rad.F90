@@ -287,7 +287,7 @@ b = stefan*t**4
 if (do_byrne_lw) then
     do k = 1, n
         lw_dtau(:,:,k) = (a_byrne * mu_byrne + b_byrne * q(:,:,k)) * &
-            (phalf(:,:,k+1) - phalf(:,:,k)) / pstd_mks
+            (p_half(:,:,k+1) - p_half(:,:,k)) / pstd_mks
     enddo
 else
     do k = 1, n
