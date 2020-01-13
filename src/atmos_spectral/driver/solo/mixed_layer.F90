@@ -69,9 +69,11 @@ real    :: qflux_amp = 0.0
 real    :: qflux_width = 16.0  ! width of qflux region in degrees
 real    :: depth = 40.0
 logical :: load_qflux = .false.
+logical :: do_qflux_kang08 = .false.
 
 
-namelist/mixed_layer_nml/ evaporation, qflux_amp, depth, qflux_width, load_qflux
+namelist/mixed_layer_nml/ evaporation, qflux_amp, depth, qflux_width, &
+    load_qflux, do_qflux_kang08
 
 !=================================================================================================================================
 
@@ -207,6 +209,15 @@ enddo
 rad_qwidth = qflux_width*PI/180.
 ocean_qflux = qflux_amp*(1-2.*rad_lat_2d**2/rad_qwidth**2) * &
         exp(- ((rad_lat_2d)**2/(rad_qwidth)**2))
+
+! Re-calculate qflux following Kang et. al. (2008)
+if (do_qflux_kang08) then
+    ocean_qflux = 0.0
+    ocean_qflux = -qflux_amp * &
+        sin((rad_lat_2d + 40.0*PI/180.0) / (50.0*PI/180.0))
+    ocean_qflux = -qflux_amp * &
+        sin((rad_lat_2d - 40.0*PI/180.0) / (50.0*PI/180.0))
+endif
 
 ! load Q flux 
 if (load_qflux) then
